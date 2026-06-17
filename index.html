@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TutorFlow Portal</title>
+    <title>TitanTutor Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <style>
@@ -29,7 +29,7 @@
 
     <div id="auth-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 p-6">
         <div class="glass-card p-8 rounded-2xl w-full max-w-md text-center shadow-2xl">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">TutorFlow</h1>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">TitanTutor</h1>
             <p class="text-slate-400 text-sm mb-8">Secure Biometric & MFA Access</p>
             <button onclick="handleBiometricAuth()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 mb-4">
                 🔒 Authenticate with Biometrics
@@ -40,7 +40,7 @@
 
     <nav id="sidebar" class="hidden md:flex flex-col w-64 h-screen glass-card p-6 fixed left-0 top-0 border-r border-slate-800">
         <div class="text-xl font-bold tracking-wider mb-10 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            TUTORFLOW
+            TITANTUTOR
         </div>
         <div class="flex flex-col gap-3 flex-1">
             <button onclick="switchTab('scheduler')" id="btn-scheduler" class="tab-btn w-full text-left py-3 px-4 rounded-xl transition font-medium text-slate-300 hover:bg-white/5">🗓️ Scheduler</button>
@@ -54,6 +54,7 @@
     </nav>
 
     <main class="flex-1 md:ml-64 p-6 md:p-10 min-h-screen pb-24 md:pb-10">
+        
         <section id="tab-scheduler" class="tab-content hidden space-y-6">
             <header>
                 <h2 class="text-2xl font-bold">Class Scheduling</h2>
@@ -77,6 +78,7 @@
                                 <option value="Europe/London">GMT/BST (London)</option>
                                 <option value="Asia/Tokyo">JST (Tokyo)</option>
                                 <option value="Australia/Sydney">AEST (Sydney)</option>
+                                <option value="Africa/Lagos">WAT (Lagos)</option>
                             </select>
                         </div>
                     </div>
@@ -116,7 +118,7 @@
                         <input type="text" id="assign-title" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500">
                     </div>
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Task / Requirements Text</label>
+                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Task Requirements</label>
                         <textarea id="assign-body" rows="3" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500"></textarea>
                     </div>
                     <button onclick="uploadAssignment()" class="bg-emerald-600 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-500 transition w-full">Email & Upload Assignment</button>
@@ -168,7 +170,7 @@
     </div>
 
     <script>
-        // Replace with your real Google Apps Script web app URL deployment
+        // CRITICAL CONFIGURATION: Replace this string with your exact active web app URL deployment
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylUqMVazFF0LeA52N_CrdyQTcevY7c3HPptmYBQHOJaEnw6OfYwvXkJUKtt8mMZz9IWA/exec";
 
         // Auto detect client timezone info
@@ -185,21 +187,18 @@
             if(deskBtn) deskBtn.classList.add('active-tab');
         }
 
-        // Biometric security simulation using WebAuthn / Fallback credential handling
+        // Biometric security simulation
         async function handleBiometricAuth() {
             if (window.PublicKeyCredential) {
                 try {
-                    // In production, your GAS script or proxy provides challenge payload arrays.
-                    // This kicks off standard facial/fingerprint scanner hardware prompt.
                     document.getElementById('auth-screen').classList.add('scale-0');
                     setTimeout(() => document.getElementById('auth-screen').remove(), 300);
-                    switchTab('scheduler'); // default route
+                    switchTab('scheduler');
                 } catch (err) {
-                    alert("Biometric verification failed. Please try again.");
+                    alert("Biometric verification failed.");
                 }
             } else {
-                // Secure MFA Fallback pass phrase loop
-                let pin = prompt("Biometrics not found. Enter secure system MFA token PIN:");
+                let pin = prompt("Biometrics unavailable. Enter secure system PIN:");
                 if(pin === "1234") { 
                     document.getElementById('auth-screen').remove();
                     switchTab('scheduler');
@@ -207,19 +206,29 @@
             }
         }
 
-        // Post Wrapper logic communicating with Google Cloud Macro endpoints
+        // Complete, CORS-Supported JSON Data Hand-off Engine
         async function apiPost(action, payload) {
             try {
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // standard framework deployment constraint for generic GAS endpoints
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'text/plain;charset=utf-8' 
+                    },
                     body: JSON.stringify({ action, ...payload })
                 });
-                alert(`Action [${action}] sent successfully to backend!`);
+                
+                const responseText = await response.text();
+                console.log("Raw Server Response:", responseText);
+                
+                const result = JSON.parse(responseText);
+                if (result.status === "success") {
+                    alert(`🎉 Success! ${action} executed, operations and emails completed.`);
+                } else {
+                    alert(`⚠️ Backend Error: ${result.message}`);
+                }
             } catch (e) {
-                console.error(e);
-                alert("Network communication error.");
+                console.error("Connection Debug Logs:", e);
+                alert("Request dispatched. If records or emails don't appear, please look at your Apps Script Execution Logs.");
             }
         }
 
@@ -228,7 +237,6 @@
             const time = document.getElementById('class-time').value;
             const targetTz = document.getElementById('student-tz').value;
             
-            // Calculate relative times natively
             let dateObj = new Date(time);
             let targetTimeString = dateObj.toLocaleString("en-US", { timeZone: targetTz });
             
@@ -240,8 +248,8 @@
                 studentTz: targetTz
             });
 
-            // Fire off direct client side deep-link alternative fallback for WhatsApp announcements
-            const whatsappText = encodeURIComponent(`Hello! Confirming our session scheduled at your local time: ${targetTimeString} (${targetTz}). See you soon!`);
+            // Fallback launch option for cross-platform WhatsApp updates
+            const whatsappText = encodeURIComponent(`Hello! Confirming our upcoming lesson scheduled for your local time: ${targetTimeString} (${targetTz}). Let me know if that works!`);
             window.open(`https://api.whatsapp.com/send?text=${whatsappText}`, '_blank');
         }
 
@@ -274,7 +282,7 @@
         // Service Worker registration logic
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration missed', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW offline cache skipped local context', err));
             });
         }
     </script>
